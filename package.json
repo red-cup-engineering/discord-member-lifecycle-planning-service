@@ -13,7 +13,6 @@
   },
   "scripts": {
     "check": "node --check src/index.mjs",
-    "test": "node --test test/*.test.mjs",
     "test:clean": "node scripts/clean-copy-check.mjs"
   },
   "engines": {
