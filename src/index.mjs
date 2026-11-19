@@ -38,7 +38,7 @@ function validateState(state, policy, now) {
   if (observed > now || now - observed > policy.maxStateAgeMinutes * 60_000) throw new TypeError("state not fresh");
   if (state.lastContactAt !== null) time(state.lastContactAt, "lastContactAt");
   if (!Array.isArray(state.priorReceipts) || state.priorReceipts.length > 64) throw new TypeError("prior receipts unbounded");
-  for (const receipt of state.priorReceipts) { exact(receipt, ["dedupeKey", "kind"], "prior receipt"); id(receipt.dedupeKey, "dedupeKey"); if (!KINDS.has(receipt.kind)) throw new TypeError("prior receipt kind invalid"); }
+  for (const record of state.priorReceipts) { exact(record, ["dedupeKey", "kind"], "prior receipt"); id(record.dedupeKey, "dedupeKey"); if (!KINDS.has(record.kind)) throw new TypeError("prior receipt kind invalid"); }
   return state;
 }
 function validateEvent(event, kind, revision, now) {
@@ -62,7 +62,7 @@ export function planMemberLifecycle(input) {
   const policy = validatePolicy(input.policy), state = validateState(input.state, policy, now), event = validateEvent(input.event, input.kind, state.sourceRevision, now);
   if (quiet(now, policy.quietInterval)) throw new TypeError("quiet interval");
   const dedupeKey = semanticHex({ communityId, memberId, kind: input.kind, eventId: event.eventId });
-  if (state.priorReceipts.some((receipt) => receipt.dedupeKey === dedupeKey)) throw new TypeError("once-only duplicate");
+  if (state.priorReceipts.some((record) => record.dedupeKey === dedupeKey)) throw new TypeError("once-only duplicate");
   if (input.kind === "reengagement" && (state.lastContactAt === null || now - time(state.lastContactAt, "lastContactAt") < policy.cooldownHours * 3_600_000)) throw new TypeError("authoritative cooldown");
   const eventDigest = semanticHex(event), stateDigest = semanticHex(state);
   const material = { communityId, memberId, kind: input.kind, eventId: event.eventId, sourceRevision: state.sourceRevision, policyDigest: policy.templates.digest, eventDigest, stateDigest };
@@ -78,11 +78,11 @@ export function validateLifecyclePlan(plan) {
   if (plan.proposalId !== `lifecycle:${semanticHex(material)}`) throw new TypeError("proposal tampered");
   return freeze(plan);
 }
-export function projectLifecycleReceipt(plan, options) {
+export function projectLifecycleRecord(plan, options) {
   const valid = validateLifecyclePlan(plan);
   exact(options, ["key", "purpose", "recordedAt"], "receipt options");
   if (typeof options.key !== "string" || options.key.length < 32) throw new TypeError("receipt key invalid");
   id(options.purpose, "purpose"); time(options.recordedAt, "recordedAt");
-  const receiptHmac = createHmac("sha256", options.key).update(`v1\0${options.purpose}\0${valid.communityId}\0${valid.kind}\0${valid.memberId}\0${valid.dedupeKey}`).digest("hex");
-  return freeze({ type: "DiscordMemberLifecycleReceipt", version: 1, purpose: options.purpose, kind: valid.kind, recordedAt: options.recordedAt, receiptHmac, privacy: { omitted: ["communityId", "memberId", "eventId", "messageContent", "channelId", "delivery", "template"] } });
+  const recordHmac = createHmac("sha256", options.key).update(`v1\0${options.purpose}\0${valid.communityId}\0${valid.kind}\0${valid.memberId}\0${valid.dedupeKey}`).digest("hex");
+  return freeze({ type: "DiscordMemberLifecycleReceipt", version: 1, purpose: options.purpose, kind: valid.kind, recordedAt: options.recordedAt, receiptHmac: recordHmac, privacy: { omitted: ["communityId", "memberId", "eventId", "messageContent", "channelId", "delivery", "template"] } });
 }
