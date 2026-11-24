@@ -1,0 +1,38 @@
+{
+  "name": "@red-cup-engineering/discord-member-lifecycle-planning-service",
+  "version": "0.1.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/red-cup-engineering/discord-member-lifecycle-planning-service.git"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./src/index.mjs"
+    }
+  },
+  "scripts": {
+    "check": "node --check src/index.mjs",
+    "test:clean": "node scripts/clean-copy-check.mjs"
+  },
+  "engines": {
+    "node": ">=22.18"
+  },
+  "dependencies": {
+    "@red-cup-engineering/computer-content-address-engineering-services-section": "0.2.0",
+    "@red-cup-engineering/cryptographic-computer-data-engineering-services-section": "0.3.1"
+  },
+  "private": false,
+  "files": [
+    "package.json",
+    "README*",
+    "LICENSE*",
+    "src",
+    "scripts"
+  ],
+  "license": "MIT",
+  "funding": {
+    "type": "individual",
+    "url": "https://github.com/561-group/.github/blob/main/TIPS.md"
+  }
+}
